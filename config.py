@@ -1,14 +1,13 @@
 import os
-from dotenv import load_dotenv
-
-# Загружаем .env
-load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+# берем либо стандартный DATABASE_URL (если вы все же его связали),
+# либо подставляем Railway Provided
+DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("RAILWAY_POSTGRESQL_URL")
+
 if not BOT_TOKEN:
     raise RuntimeError("BOT_TOKEN не задан в окружении")
-
-DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL не задан в окружении – добавьте в .env строку вида\n"
-                       "DATABASE_URL=postgresql://postgres:пароль@localhost:5432/mycrypto")
+    raise RuntimeError(
+        "DATABASE_URL и RAILWAY_POSTGRESQL_URL не найдены — проверьте переменные Railway"
+    )
