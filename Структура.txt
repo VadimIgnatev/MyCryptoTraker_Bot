@@ -1,0 +1,5 @@
+MyCryptoTraker_Bot/  
+├── main.py          # Основной код бота  
+├── config.py        # Токен и настройки  
+├── database.py      # Работа с SQLite  
+└── api.py           # Запросы к CoinGecko/Binance  
