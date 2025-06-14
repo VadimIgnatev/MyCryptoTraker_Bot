@@ -1,30 +1,24 @@
-import aiohttp
+import asyncio
+from binance import AsyncClient, BinanceAPIException
 
-BINANCE_BASE = "https://api.binance.com/api/v3"
+# Минимальный клиент-одиночка
+_client = None
+
+async def _get_client():
+    global _client
+    if _client is None:
+        _client = await AsyncClient.create()
+    return _client
 
 async def is_pair_valid(symbol: str) -> bool:
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f"{BINANCE_BASE}/exchangeInfo") as resp:
-            data = await resp.json()
-    return symbol.upper() in {item['symbol'] for item in data.get('symbols', [])}
+    client = await _get_client()
+    try:
+        await client.get_symbol_ticker(symbol=symbol)
+        return True
+    except BinanceAPIException:
+        return False
 
 async def get_current_price(symbol: str) -> float:
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f"{BINANCE_BASE}/ticker/price?symbol={symbol}") as resp:
-            data = await resp.json()
-    return float(data['price'])
-
-async def resolve_symbol(raw: str) -> str | None:
-    """
-    Пытается найти корректный символ:
-      - raw (e.g. "BTC")
-      - raw+USDT ("BTCUSDT")
-    Возвращает валидный тикер или None.
-    """
-    sym = raw.upper()
-    if await is_pair_valid(sym):
-        return sym
-    sym_usdt = sym + "USDT"
-    if await is_pair_valid(sym_usdt):
-        return sym_usdt
-    return None
+    client = await _get_client()
+    data = await client.get_symbol_ticker(symbol=symbol)
+    return float(data["price"])
